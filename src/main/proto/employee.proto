@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files  = true;
+option java_package = "com.employees";
+option java_outer_classname = "EmpyoleeProto";
+
+service EmpService
+{
+  rpc createEmp(empRequest) returns (empResponse);
+}
+message empRequest
+{
+  int64 id = 1;
+  string name  = 2;
+  string email = 3;
+
+}
+message empResponse
+{
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
