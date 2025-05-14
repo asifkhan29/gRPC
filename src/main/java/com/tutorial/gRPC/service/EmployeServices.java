@@ -8,6 +8,7 @@ import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.grpc.server.service.GrpcService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,10 +25,10 @@ public class EmployeServices extends EmpServiceGrpc.EmpServiceImplBase {
                 .email(request.getEmail()).build());
 
         responseObserver.onNext(EmpResponse.newBuilder().
-                         setId(saved.getId())
-                         .setEmail(saved.getEmail())
-                         .setName(saved.getName())
-                         .build());
+                setId(saved.getId())
+                .setEmail(saved.getEmail())
+                .setName(saved.getName())
+                .build());
         responseObserver.onCompleted();
 
 
@@ -114,4 +115,105 @@ public class EmployeServices extends EmpServiceGrpc.EmpServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void getAllEmpsStream(Empty request, StreamObserver<EmpResponse> responseObserver) {
+        List<Employe> employee = employeeRepo.findAll();
+        employee.forEach(emp ->
+        {
+            EmpResponse response = EmpResponse.newBuilder()
+                    .setId(emp.getId())
+                    .setName(emp.getName())
+                    .setEmail(emp.getEmail())
+                    .build();
+            responseObserver.onNext(response);
+            try {
+                Thread.sleep(1000); // 1 second delay
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                responseObserver.onError(e); // Handle interruption
+                return;
+            }
+
+        });
+        responseObserver.onCompleted();
+
+    }
+
+    @Override
+    public StreamObserver<EmpRequest> saveMulipleEmployeeAsStream(StreamObserver<UploadStatus> responseObserver) {
+        List<Employe> emp = new ArrayList<>();
+
+
+        return new StreamObserver<EmpRequest>() {
+            @Override
+            public void onNext(EmpRequest value) {
+                Employe emp1 = Employe.builder().email(value.getEmail())
+                        .name(value.getName())
+                        .build();
+
+                emp.add(emp1);
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                responseObserver.onNext(
+                        UploadStatus.newBuilder().setMessage("Error saving employees / No Employee Saved / Please Try Again")
+                                .setCount(0).build()
+                );
+                responseObserver.onCompleted();
+
+            }
+
+            @Override
+            public void onCompleted() {
+                employeeRepo.saveAll(emp);
+
+                responseObserver.onNext(
+                        UploadStatus.newBuilder().setMessage("Successfully saved employees")
+                                .setCount(emp.size()).build()
+                );
+                responseObserver.onCompleted();
+
+            }
+        };
+    }
+
+    @Override
+    public StreamObserver<EmpIdRequest> getEmployeeByIdStream(StreamObserver<EmpStreamResponse> responseObserver) {
+        return new StreamObserver<EmpIdRequest>() {
+            @Override
+            public void onNext(EmpIdRequest value) {
+                Optional<Employe> emp = employeeRepo.findById(value.getId());
+                EmpStreamResponse response;
+                if (emp.isPresent()) {
+                    Employe employe = emp.get();
+                    response = EmpStreamResponse.newBuilder().setId(0)
+                            .setEmail(employe.getEmail())
+                            .setName(employe.getName())
+                            .setStatus("Employee Found")
+                            .build();
+                }
+                else{
+                    response = EmpStreamResponse.newBuilder()
+                            .setStatus("No Employee Found")
+                            .build();
+                }
+                responseObserver.onNext(response);
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                throw new RuntimeException("Error in fetching Empolyee / Please Restart the Connection");
+            }
+
+            @Override
+            public void onCompleted() {
+
+                responseObserver.onCompleted();
+
+            }
+        };
+    }
 }

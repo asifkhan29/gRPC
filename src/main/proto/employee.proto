@@ -10,6 +10,16 @@ service EmpService {
   rpc UpdateEmp (EmpRequest) returns (EmpResponse);
   rpc DeleteEmp (EmpIdRequest) returns (DeleteResponse);
   rpc GetAllEmps (Empty) returns (EmpListResponse);
+  rpc GetAllEmpsStream (Empty) returns (stream EmpResponse);
+  rpc SaveMulipleEmployeeAsStream(stream EmpRequest) returns (UploadStatus);
+  rpc GetEmployeeByIdStream(stream EmpIdRequest) returns (stream EmpStreamResponse);
+}
+
+message EmpStreamResponse {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  string status = 5; // For "Not Found" or "Success"
 }
 
 message EmpRequest {
@@ -37,3 +47,8 @@ message EmpListResponse {
 }
 
 message Empty {}
+
+message UploadStatus {
+  string message = 1;
+  int32 count = 2;
+}
