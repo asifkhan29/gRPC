@@ -1,23 +1,39 @@
 syntax = "proto3";
 
-option java_multiple_files  = true;
+option java_multiple_files = true;
 option java_package = "com.employees";
-option java_outer_classname = "EmpyoleeProto";
+option java_outer_classname = "EmployeeProto";
 
-service EmpService
-{
-  rpc createEmp(empRequest) returns (empResponse);
+service EmpService {
+  rpc CreateEmp (EmpRequest) returns (EmpResponse);
+  rpc GetEmpById (EmpIdRequest) returns (EmpResponse);
+  rpc UpdateEmp (EmpRequest) returns (EmpResponse);
+  rpc DeleteEmp (EmpIdRequest) returns (DeleteResponse);
+  rpc GetAllEmps (Empty) returns (EmpListResponse);
 }
-message empRequest
-{
-  int64 id = 1;
-  string name  = 2;
-  string email = 3;
 
-}
-message empResponse
-{
+message EmpRequest {
   int64 id = 1;
   string name = 2;
   string email = 3;
 }
+
+message EmpResponse {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message EmpIdRequest {
+  int64 id = 1;
+}
+
+message DeleteResponse {
+  string message = 1;
+}
+
+message EmpListResponse {
+  repeated EmpResponse employees = 1;
+}
+
+message Empty {}
